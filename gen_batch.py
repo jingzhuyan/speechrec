@@ -27,7 +27,7 @@ audio_path = root_path+'/train/audio/'
 subFolderList = sorted(['down', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes'])
 tg_id = dict((subFolderList[i], i) for i in range(len(subFolderList)))
 
-#====convert to images====
+#====convert to images==== 
 def log_specgram(audio, sample_rate, window_size=20,
                  step_size=10, eps=1e-10):
     nperseg = int(round(window_size * sample_rate / 1e3))
@@ -47,7 +47,7 @@ def get_batch(BATCH_SIZE):
             all_files = [y for y in os.listdir(audio_path + x) if '.wav' in y]
             j=0
             while (j+1)*BATCH_SIZE < len(all_files):
-                spec_batch=np.zeros(shape=[BATCH_SIZE, 99, 161])
+                spec_batch=np.zeros(shape=[BATCH_SIZE, 99, 161]) 
                 tg_batch=np.zeros([BATCH_SIZE, NUM_CLASSES])
                 for k, file in enumerate(all_files[j*BATCH_SIZE:(j+1)*BATCH_SIZE]):
                     wav_path = audio_path + x + '/' + file
@@ -65,6 +65,14 @@ gen=get_batch(128)
 s, t = next(gen)
 '''
 
+'''
+1a. Randomize batch with random labels
+1b. Creat a validation set
+2. Analyze dimensions of spectrograms
+3. MFCC
+4. Add background noise ?
+5. How to predict silence
+'''
 
 
 

@@ -3,6 +3,11 @@
 Created on Mon Nov 20 15:35:10 2017
 
 @author: jili
+
+Tune
+1. Loss function sigmoid_cross_entropy_with_logits
+2. how many conv and fully connected layers
+3. hyperparameters 
 """
 
 from __future__ import absolute_import
@@ -47,7 +52,7 @@ for i in range(4):
     conv = tf.layers.max_pooling2d(inputs=conv, pool_size=[2,2], strides=2)
 
 mpool = tf.reduce_max(conv, axis=[1, 2], keep_dims=True)
-apool = tf.reduce_mean(conv, axis=[1, 2], keep_dims=True)
+apool = tf.reduce_mean(conv, axis=[1, 2], keep_dims=True) # ?
 pool = 0.5 * (mpool + apool)
 flat = tf.reshape(pool, [-1, 128])
 
