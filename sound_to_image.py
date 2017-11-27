@@ -4,6 +4,8 @@
 Created on Sun Nov 19 21:45:22 2017
 
 @author: jingzhuyan
+
+Code credit: https://www.kaggle.com/timolee/audio-data-conversion-to-images-eda
 """
 
 import matplotlib.pyplot as plt
@@ -19,25 +21,33 @@ from scipy.fftpack import fft
 #%matplotlib inline
 
 #====set file path====
-root_path='/Users/jingzhuyan/Documents/GitHub'
+root_path='/Users/jingzhuyan/Documents/kaggle'
 audio_path = root_path+'/train/audio/'
 img_path_train = root_path+'/image/train/'
 img_path_test = root_path+'/image/test/'
 #test_audio_path = '../input/test/audio/'
-samples = []
 
 #====create directories for images====
 if not os.path.exists(img_path_train):
     os.makedirs(img_path_train)
 if not os.path.exists(img_path_test):
     os.makedirs(img_path_test)
-
+'''
+# for all targets
 subFolderList = []
 for x in os.listdir(audio_path):
     if os.path.isdir(audio_path + '/' + x):
         subFolderList.append(x)
         if not os.path.exists(img_path_train + '/' + x):
             os.makedirs(img_path_train +'/'+ x)
+'''            
+# only for targets in test          
+subFolderList = sorted(['down', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes'])
+for x in subFolderList:
+    if os.path.isdir(audio_path + '/' + x):
+        if not os.path.exists(img_path_train + '/' + x):
+            os.makedirs(img_path_train +'/'+ x)
+
 '''
 #===pull samples====
 # 30 labels + background noise
@@ -84,7 +94,6 @@ for i, filepath in enumerate(sample_audio[:9]):
     plt.imshow(spectrogram.T, aspect='auto', origin='lower')
     plt.axis('off')
 '''
-
 def wav2img(wav_path, targetdir='', figsize=(4,4)):
     """
     takes in wave file path
@@ -103,9 +112,22 @@ def wav2img(wav_path, targetdir='', figsize=(4,4)):
     plt.imsave('%s.png' % output_file, spectrogram)
     plt.close()
 
+def img_dim(wav_path, targetdir='', figsize=(4,4)):
+    samplerate, test_sound  = wavfile.read(wav_path)
+    _, spectrogram = log_specgram(test_sound, samplerate)
+    return spectrogram.shape[0]
+    
+img_dim_dict={}
 for i, x in enumerate(subFolderList):
     print(i, ':', x)
+    img_dim_dict[x]=[]
     # get all the wave files
     all_files = [y for y in os.listdir(audio_path + x) if '.wav' in y]
-    for file in all_files[:20]: # 20 for each label
+    for file in all_files:#[:20]: # 20 for each label
         wav2img(audio_path + x + '/' + file, img_path_train + x)
+        img_dim_dict[x].append(img_dim(audio_path + x + '/' + file, img_path_train + x))
+
+#>>> [max(img_dim_dict[x]) for x in img_dim_dict.keys()]
+#[99, 99, 99, 99, 99, 99, 99, 99, 99, 99]
+#>>> [min(img_dim_dict[x]) for x in img_dim_dict.keys()]
+#[41, 45, 40, 44, 49, 45, 40, 50, 45, 45]
