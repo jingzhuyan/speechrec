@@ -20,8 +20,8 @@ from scipy.fftpack import fft
 
 #====set file path====
 #root_path='/Users/jingzhuyan/Documents/kaggle'
-#root_path='/Users/jili/Box Sync/speechRec/'
-root_path='/Users/jingzhuyan/Documents/GitHub'
+root_path='/Users/jili/Box Sync/speechRec/'
+#root_path='/Users/jingzhuyan/Documents/GitHub'
 audio_path = root_path+'/train/audio/'
 img_path_train = root_path+'/image/train/'
 img_path_test = root_path+'/image/test/'
@@ -61,7 +61,7 @@ def cut_background_noise(wav_path, targetdir='', figsize=(4,4)):
     all_files = [y for y in os.listdir(wav_path) if '.wav' in y]
     i=0
     fig = plt.figure(figsize=figsize)
-    for files in all_files:
+    for file in all_files:
         samplerate, samples  = wavfile.read(wav_path+'/'+file)
         new_samplerate = 8000 # the original is 16000
         resampled = signal.resample(samples, int(float(new_samplerate)/samplerate * samples.shape[0]))
@@ -86,7 +86,7 @@ def cut_background_noise(wav_path, targetdir='', figsize=(4,4)):
             output_file = targetdir +'/'+ str(i)
             plt.imsave('%s.png' % output_file, cut_spectrogram)
             plt.close()
-        break # comment to generate all
+        #break # comment to generate all
         
 cut_background_noise(audio_path+'_background_noise_',img_path_train + 'silence')
 
@@ -137,7 +137,7 @@ for i, x in enumerate(subFolderList):
     img_dim_dict[x]=[]
     # get all the wave files
     all_files = [y for y in os.listdir(audio_path + x) if '.wav' in y]
-    for file in all_files[:100]: #100 images for each label
+    for file in all_files: #[:100]: #100 images for each label
         if (x + '/' + file) in validation_list:
             wav2img(audio_path + x + '/' + file, img_path_validate)
         elif (x + '/' + file) in testing_list:
