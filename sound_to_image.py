@@ -2,8 +2,8 @@
 # -*- coding: utf-8 -*-
 """
 Created on Sun Nov 19 21:45:22 2017
-
 @author: jingzhuyan
+Partial code credit: https://www.kaggle.com/timolee/audio-data-conversion-to-images-eda
 """
 
 import matplotlib.pyplot as plt
@@ -19,41 +19,77 @@ from scipy.fftpack import fft
 #%matplotlib inline
 
 #====set file path====
-root_path='/Users/jili/Box Sync/speechRec/'
-#root_path='/Users/jingzhuyan/Documents/GitHub'
+#root_path='/Users/jingzhuyan/Documents/kaggle'
+#root_path='/Users/jili/Box Sync/speechRec/'
+root_path='/Users/jingzhuyan/Documents/GitHub'
 audio_path = root_path+'/train/audio/'
 img_path_train = root_path+'/image/train/'
 img_path_test = root_path+'/image/test/'
+img_path_validate = root_path+'/image/validate/'
 #test_audio_path = '../input/test/audio/'
-samples = []
+
+#====read validation & test set====
+# no overlap btw validation & test set
+text_file = open(root_path+'/train/validation_list.txt', "r")
+validation_list = text_file.read().split('\n')
+text_file = open(root_path+'/train/testing_list.txt', "r")
+testing_list = text_file.read().split('\n')
 
 #====create directories for images====
 if not os.path.exists(img_path_train):
     os.makedirs(img_path_train)
 if not os.path.exists(img_path_test):
     os.makedirs(img_path_test)
-
-subFolderList = []
-for x in os.listdir(audio_path):
+if not os.path.exists(img_path_validate):
+    os.makedirs(img_path_validate)
+        
+# only for targets in test          
+subFolderList = sorted(['down', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes','silence'])
+for x in subFolderList:
     if os.path.isdir(audio_path + '/' + x):
-        subFolderList.append(x)
+        #subFolderList.append(x)
         if not os.path.exists(img_path_train + '/' + x):
             os.makedirs(img_path_train +'/'+ x)
-'''
-#===pull samples====
-# 30 labels + background noise
-sample_audio = []
-total = 0
-for x in subFolderList:
-    # get all the wave files
-    all_files = [y for y in os.listdir(audio_path + x) if '.wav' in y]
-    total += len(all_files)
-    # collect the first file from each dir
-    sample_audio.append(audio_path  + x + '/'+ all_files[0])
-    # show file counts
-    print('count: %d : %s' % (len(all_files), x ))
-print(total)
-'''
+if not os.path.exists(img_path_train + '/train_all'):
+    os.makedirs(img_path_train +'/train_all')
+
+
+
+
+#====cut background noise and save to silence====
+def cut_background_noise(wav_path, targetdir='', figsize=(4,4)):
+    all_files = [y for y in os.listdir(wav_path) if '.wav' in y]
+    i=0
+    fig = plt.figure(figsize=figsize)
+    for files in all_files:
+        samplerate, samples  = wavfile.read(wav_path+'/'+file)
+        new_samplerate = 8000 # the original is 16000
+        resampled = signal.resample(samples, int(float(new_samplerate)/samplerate * samples.shape[0]))
+        _, spectrogram = log_specgram(resampled, new_samplerate)
+        
+        n=int(spectrogram.shape[0]/99) # a full audio is cut to n parts with each part length 99
+        for t in range(n):
+            i+=1
+            cut_spectrogram=spectrogram[99*t:99*(t+1)]
+            output_file = targetdir +'/'+ str(i)
+            plt.imsave('%s.png' % output_file, cut_spectrogram)
+            plt.close()
+        for t in range(n-1):
+            i+=1
+            cut_spectrogram=spectrogram[99*t+33:99*(t+1)+33]
+            output_file = targetdir +'/'+ str(i)
+            plt.imsave('%s.png' % output_file, cut_spectrogram)
+            plt.close()
+        for t in range(n-1):
+            i+=1
+            cut_spectrogram=spectrogram[99*t+66:99*(t+1)+66]
+            output_file = targetdir +'/'+ str(i)
+            plt.imsave('%s.png' % output_file, cut_spectrogram)
+            plt.close()
+        break # comment to generate all
+        
+cut_background_noise(audio_path+'_background_noise_',img_path_train + 'silence')
+
 #====convert to images====
 def log_specgram(audio, sample_rate, window_size=20,
                  step_size=10, eps=1e-10):
@@ -66,47 +102,52 @@ def log_specgram(audio, sample_rate, window_size=20,
                                     noverlap=noverlap,
                                     detrend=False)
     return freqs, np.log(spec.T.astype(np.float32) + eps)
-'''
-# 9 sample plots
-fig = plt.figure(figsize=(10,10))
-# for each of the samples
-for i, filepath in enumerate(sample_audio[:9]):
-    # Make subplots
-    plt.subplot(3,3,i+1)
-    
-    # pull the labels
-    label = filepath.split('/')[-2]
-    plt.title(label)
-    
-    # create spectogram
-    samplerate, test_sound  = wavfile.read(filepath)
-    _, spectrogram = log_specgram(test_sound, samplerate)
-    
-    plt.imshow(spectrogram.T, aspect='auto', origin='lower')
-    plt.axis('off')
-'''
 
 def wav2img(wav_path, targetdir='', figsize=(4,4)):
     """
     takes in wave file path
     and the fig size. Default 4,4 will make images 288 x 288
     """
-
     fig = plt.figure(figsize=figsize)    
     # use soundfile library to read in the wave files
-    samplerate, test_sound  = wavfile.read(wav_path)
-    _, spectrogram = log_specgram(test_sound, samplerate)
-    
+    samplerate, samples  = wavfile.read(wav_path)
+    new_samplerate = 8000 # the original is 16000
+    resampled = signal.resample(samples, int(float(new_samplerate)/samplerate * samples.shape[0]))
+    _, spectrogram = log_specgram(resampled, new_samplerate)
+    padded_spectrogram=np.zeros([99,81])
+    #padded_spectrogram[:min(spectrogram.shape[0],99), :min(spectrogram.shape[1],161)]=0 #[99,161] is the max dims
+    padded_spectrogram[:spectrogram.shape[0], :spectrogram.shape[1]]=spectrogram
     ## create output path
     output_file = wav_path.split('/')[-1].split('.wav')[0]
-    output_file = targetdir +'/'+ output_file
+    target_name = wav_path.split('/')[-2]
+    output_file = targetdir +'/'+ target_name + '_'+ output_file
     #plt.imshow(spectrogram.T, aspect='auto', origin='lower')
-    plt.imsave('%s.png' % output_file, spectrogram)
+    plt.imsave('%s.png' % output_file, padded_spectrogram)
     plt.close()
 
+def img_dim(wav_path, targetdir='', figsize=(4,4)):
+    samplerate, test_sound  = wavfile.read(wav_path)
+    _, spectrogram = log_specgram(test_sound, samplerate)
+    return spectrogram.shape[0]
+
+#====convert to image and save, separate train, validate, test====  
+img_dim_dict={}
 for i, x in enumerate(subFolderList):
     print(i, ':', x)
+    img_dim_dict[x]=[]
     # get all the wave files
     all_files = [y for y in os.listdir(audio_path + x) if '.wav' in y]
-    for file in all_files[:20]: # 20 for each label
-        wav2img(audio_path + x + '/' + file, img_path_train + x)
+    for file in all_files[:100]: #100 images for each label
+        if (x + '/' + file) in validation_list:
+            wav2img(audio_path + x + '/' + file, img_path_validate)
+        elif (x + '/' + file) in testing_list:
+            wav2img(audio_path + x + '/' + file, img_path_test)
+        else:
+            wav2img(audio_path + x + '/' + file, img_path_train + 'train_all')#x #save in one folder
+        #img_dim_dict[x].append(img_dim(audio_path + x + '/' + file, img_path_train + x))
+
+
+#>>> [max(img_dim_dict[x]) for x in img_dim_dict.keys()]
+#[99, 99, 99, 99, 99, 99, 99, 99, 99, 99]
+#>>> [min(img_dim_dict[x]) for x in img_dim_dict.keys()]
+#[41, 45, 40, 44, 49, 45, 40, 50, 45, 45]
