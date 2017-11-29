@@ -25,13 +25,13 @@ import numpy as np
 LEARNING_RATE=0.01
 NUM_CLASSES=10
 BATCH_SIZE=128
-NUM_EPOCHES=3
+NUM_EPOCHES=5
 EVA_STEP=10
 #########################################
 # Load data                             #
 #########################################
 root_path = '/Users/jili/Box Sync/speechRec/'
-exec(open(root_path+'speechrec/gen_batch.py').read())
+exec(open(root_path+'speechrec/wav_gen.py').read())
 NUM_TRAIN_STEPS=int(len(all_files)/BATCH_SIZE)
 ##################################################
 # Build a graph                                  #
@@ -56,7 +56,7 @@ pool = 0.5 * (mpool + apool)
 flat = tf.reshape(pool, [-1, 128])
 
 dense_layer = tf.layers.dense(inputs=flat, units=64, activation=tf.nn.relu)
-dense_drop = tf.nn.dropout(dense_layer, keep_prob=1)
+dense_drop = tf.nn.dropout(dense_layer, keep_prob=0.7)
 
 logits = tf.layers.dense(dense_drop, NUM_CLASSES, activation=None, name='logits')
 probs=tf.nn.softmax(logits, name='probs')

@@ -44,7 +44,10 @@ if not os.path.exists(img_path_validate):
     os.makedirs(img_path_validate)
         
 # only for targets in test          
-subFolderList = sorted(['down', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes','silence'])
+#subFolderList = sorted(['down', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes','silence'])
+subFolderList=sorted(list(set(os.listdir(audio_path)) - set(['.DS_Store','_background_noise_'])))
+unknownList=list(set(subFolderList)
+                -set(['down', 'go', 'left', 'no', 'off', 'on', 'right', 'stop', 'up', 'yes','silence']))
 for x in subFolderList:
     if os.path.isdir(audio_path + '/' + x):
         #subFolderList.append(x)
@@ -53,7 +56,17 @@ for x in subFolderList:
 if not os.path.exists(img_path_train + '/train_all'):
     os.makedirs(img_path_train +'/train_all')
 
-
+def log_specgram(audio, sample_rate, window_size=20,
+                 step_size=10, eps=1e-10):
+    nperseg = int(round(window_size * sample_rate / 1e3))
+    noverlap = int(round(step_size * sample_rate / 1e3))
+    freqs, _, spec = signal.spectrogram(audio,
+                                    fs=sample_rate,
+                                    window='hann',
+                                    nperseg=nperseg,
+                                    noverlap=noverlap,
+                                    detrend=False)
+    return freqs, np.log(spec.T.astype(np.float32) + eps)
 
 
 #====cut background noise and save to silence====
@@ -62,6 +75,7 @@ def cut_background_noise(wav_path, targetdir='', figsize=(4,4)):
     i=0
     fig = plt.figure(figsize=figsize)
     for file in all_files:
+        print('Cut bkgd noise: %s' %(file))
         samplerate, samples  = wavfile.read(wav_path+'/'+file)
         new_samplerate = 8000 # the original is 16000
         resampled = signal.resample(samples, int(float(new_samplerate)/samplerate * samples.shape[0]))
@@ -91,18 +105,6 @@ def cut_background_noise(wav_path, targetdir='', figsize=(4,4)):
 cut_background_noise(audio_path+'_background_noise_',img_path_train + 'silence')
 
 #====convert to images====
-def log_specgram(audio, sample_rate, window_size=20,
-                 step_size=10, eps=1e-10):
-    nperseg = int(round(window_size * sample_rate / 1e3))
-    noverlap = int(round(step_size * sample_rate / 1e3))
-    freqs, _, spec = signal.spectrogram(audio,
-                                    fs=sample_rate,
-                                    window='hann',
-                                    nperseg=nperseg,
-                                    noverlap=noverlap,
-                                    detrend=False)
-    return freqs, np.log(spec.T.astype(np.float32) + eps)
-
 def wav2img(wav_path, targetdir='', figsize=(4,4)):
     """
     takes in wave file path
@@ -120,6 +122,9 @@ def wav2img(wav_path, targetdir='', figsize=(4,4)):
     ## create output path
     output_file = wav_path.split('/')[-1].split('.wav')[0]
     target_name = wav_path.split('/')[-2]
+    # If target_name in unknown list, save file as unknown_filename
+    if target_name in unknownList:
+        target_name = 'unknown'
     output_file = targetdir +'/'+ target_name + '_'+ output_file
     #plt.imshow(spectrogram.T, aspect='auto', origin='lower')
     plt.imsave('%s.png' % output_file, padded_spectrogram)

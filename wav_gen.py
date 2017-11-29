@@ -22,7 +22,7 @@ from random import shuffle
 #====set file path====
 root_path='/Users/jili/Box Sync/speechRec/'
 #root_path='/Users/jingzhuyan/Documents/GitHub'
-audio_path = root_path+'/train/golden/'
+audio_path = root_path+'/wav/train_set/'
 #test_audio_path = '../input/test/audio/'
 
 all_files = [y for y in os.listdir(audio_path) if '.wav' in y]
