@@ -114,7 +114,7 @@ def wav2img(wav_path, targetdir='', figsize=(4,4)):
     takes in wave file path
     and the fig size. Default 4,4 will make images 288 x 288
     """
-    fig = plt.figure(figsize=figsize)    
+    #fig = plt.figure(figsize=figsize)    
     # use soundfile library to read in the wave files
     samplerate, samples  = wavfile.read(wav_path)
     new_samplerate = 8000 # the original is 16000
@@ -130,9 +130,10 @@ def wav2img(wav_path, targetdir='', figsize=(4,4)):
     if target_name in unknownList:
         target_name = 'unknown'
     output_file = targetdir +'/'+ target_name + '_'+ output_file
+    scipy.misc.imsave('%s.png' % output_file, padded_spectrogram)
     #plt.imshow(spectrogram.T, aspect='auto', origin='lower')
-    plt.imsave('%s.png' % output_file, padded_spectrogram)
-    plt.close()
+    #plt.imsave('%s.png' % output_file, padded_spectrogram)
+    #plt.close()
 
 def img_dim(wav_path, targetdir='', figsize=(4,4)):
     samplerate, test_sound  = wavfile.read(wav_path)
