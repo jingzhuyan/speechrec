@@ -25,7 +25,7 @@ import numpy as np
 LEARNING_RATE=0.01
 NUM_CLASSES=10
 BATCH_SIZE=128
-NUM_EPOCHES=5
+NUM_EPOCHES=20
 EVA_STEP=10
 #########################################
 # Load data                             #
@@ -56,7 +56,7 @@ pool = 0.5 * (mpool + apool)
 flat = tf.reshape(pool, [-1, 128])
 
 dense_layer = tf.layers.dense(inputs=flat, units=64, activation=tf.nn.relu)
-dense_drop = tf.nn.dropout(dense_layer, keep_prob=0.7)
+dense_drop = tf.nn.dropout(dense_layer, keep_prob=1)
 
 logits = tf.layers.dense(dense_drop, NUM_CLASSES, activation=None, name='logits')
 probs=tf.nn.softmax(logits, name='probs')
@@ -85,3 +85,8 @@ with tf.Session() as sess:
                 print('Average loss at Epoch %d and Step %d is: %f' %(ep, step, total_loss/EVA_STEP))
                 total_loss=0.0
     saver.save(sess, root_path+'objects/20171128/1', global_step=0)
+    
+os.chdir(root_path+'/speechrec/')
+exec(open('wav_eval.py').read())
+
+

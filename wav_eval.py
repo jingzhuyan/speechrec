@@ -27,8 +27,8 @@ audio_path = root_path+'/wav/test_set/'
 
 # Parameters
 BATCH_SIZE=128
-STEP=10
-
+STEP=20
+NUM_CLASSES=10
 # Load
 os.chdir(root_path+'/objects/20171128/')
 sess = tf.Session()
@@ -79,60 +79,49 @@ def get_batch(BATCH_SIZE):
             j+=1
             yield spec_batch, tg_batch
 
-'''
-batch_gen_val=get_val_batch(vecs, tg, BATCH_SIZE)
+
+batch_gen=get_batch(BATCH_SIZE)
 ttloss=0
-valprob=np.zeros((len(data), NUM_CATES))
+valprob=np.zeros((STEP*BATCH_SIZE, NUM_CLASSES))
+valtg=np.zeros((STEP*BATCH_SIZE, NUM_CLASSES))
 for i in range(STEP):
-    index_batch, wd_wt_batch, tg_batch = next(batch_gen_val) 
-    wd_id_batch=index_batch[:,1]
-    feed_dict={
-             input_indices: index_batch, 
-             input_wd_ids: wd_id_batch,
-             input_wd_wts: wd_wt_batch,
-             targets: tg_batch}       
+    batch_x, batch_y = next(batch_gen) 
+    feed_dict={x: batch_x, y: batch_y}   
     batch_loss=sess.run(loss, feed_dict)
     ttloss += batch_loss
     batch_prob=sess.run(probs, feed_dict)
     valprob[i*BATCH_SIZE:(i+1)*BATCH_SIZE,]=batch_prob  
+    valtg[i*BATCH_SIZE:(i+1)*BATCH_SIZE,]=batch_y
 valloss = ttloss/STEP    
 print('Validation loss: %f' %(valloss))
 
-# Evaluation
-from sklearn.metrics import roc_auc_score
-s=0
-cnt=0
-for k in range(tg.shape[1]):
-    if sum(tg[:,k]) == 0:
-        cnt+=1
-    else:
-        auc=roc_auc_score(tg[:,k], valprob[:,k])
-        print(auc)
-        s+=auc
-print('Ave AUC: %f' %(s/(tg.shape[1]-cnt)))
+## Evaluation
+from sklearn.metrics import roc_auc_score, classification_report
+tt=0
+for k in range(valtg.shape[1]):
+    auc=roc_auc_score(valtg[:,k], valprob[:,k])
+    print(auc)
+    tt+=auc
+print('Ave AUC: %f' %(tt/valtg.shape[1]))
 
-
-id_cate=dict([(val,key) for (key,val) in cate_id.items()])
+# Convert id to tg
+id_tg=dict([(val,key) for (key,val) in tg_id.items()])
 predid=[]
-predcate=[]
-truecate=[]
+predtg=[]
+truetg=[]
 for i in range(valprob.shape[0]):
-    temp=np.where(valprob[i]>0.5)[0]
-    if len(temp)==0:
-        temp=np.array([np.argmax(valprob[i])])
-    predid.append(temp)
-    predcate.append([id_cate[el] for el in temp])
-    temp=np.where(tg[i]==1)[0]
-    truecate.append([id_cate[el] for el in temp])
-df=pd.DataFrame({'true':truecate, 'pred':predcate})
-df['tx'] = tx
-'''
+    pred=np.argmax(valprob[i])
+    predid.append(pred)
+    predtg.append(id_tg[pred])
+    trueid=np.where(valtg[i]==1)[0][0]
+    truetg.append(id_tg[trueid])
+print(classification_report(truetg, predtg))
 
 '''
-l=[len(el) for el in tx]
-from scipy import stats
-stats.describe(l)
+# Plot roc curve
+from sklearn.metrics import roc_curve 
+from matplotlib import pyplot as plt
+fpr, tpr, threshold = roc_curve(valtg[:,0],valprob[:,0])
+plt.plot(fpr, tpr)
 '''
-
-
 
