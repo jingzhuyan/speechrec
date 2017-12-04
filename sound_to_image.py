@@ -11,7 +11,7 @@ from matplotlib.backend_bases import RendererBase
 from scipy import signal
 from scipy.io import wavfile
 #import soundfile as sf
-import os
+import os, pickle
 import numpy as np
 from PIL import Image
 from scipy.fftpack import fft
@@ -19,9 +19,9 @@ from scipy.fftpack import fft
 #%matplotlib inline
 
 #====set file path====
-#root_path='/Users/jingzhuyan/Documents/kaggle'
+root_path='/Users/jingzhuyan/Documents/kaggle'
 #root_path='/Users/jili/Box Sync/speechRec/'
-root_path='/Users/jingzhuyan/Documents/GitHub'
+#root_path='/Users/jingzhuyan/Documents/GitHub'
 audio_path = root_path+'/train/audio/'
 img_path_train = root_path+'/image/train/'
 img_path_test = root_path+'/image/test/'
@@ -75,10 +75,10 @@ def log_specgram(audio, sample_rate, window_size=20,
 def cut_background_noise(wav_path, targetdir='', figsize=(4,4)):
     all_files = [y for y in os.listdir(wav_path) if '.wav' in y]
     i=0
-    fig = plt.figure(figsize=figsize)
+    #fig = plt.figure(figsize=figsize)
     for file in all_files:
-        if file == 'doing_the_dishes.wav':
-            continue
+        #if file == 'doing_the_dishes.wav':
+        #    continue
         print('Cut bkgd noise: %s' %(file))
         samplerate, samples  = wavfile.read(wav_path+'/'+file)
         new_samplerate = 8000 # the original is 16000
@@ -90,21 +90,24 @@ def cut_background_noise(wav_path, targetdir='', figsize=(4,4)):
             i+=1
             cut_spectrogram=spectrogram[99*t:99*(t+1)]
             output_file = targetdir +'/silence_'+ str(i)
-            plt.imsave('%s.png' % output_file, cut_spectrogram)
-            plt.close()
+            pickle.dump(cut_spectrogram,open('%s.pkl' % output_file,'wb'))
+            #plt.imsave('%s.png' % output_file, cut_spectrogram)
+            #plt.close()
         for t in range(n-1):
             i+=1
             cut_spectrogram=spectrogram[99*t+33:99*(t+1)+33]
             output_file = targetdir +'/silence_'+ str(i)
-            plt.imsave('%s.png' % output_file, cut_spectrogram)
-            plt.close()
+            pickle.dump(cut_spectrogram,open('%s.pkl' % output_file,'wb'))
+            #plt.imsave('%s.png' % output_file, cut_spectrogram)
+            #plt.close()
         for t in range(n-1):
             i+=1
             cut_spectrogram=spectrogram[99*t+66:99*(t+1)+66]
             output_file = targetdir +'/silence_'+ str(i)
-            plt.imsave('%s.png' % output_file, cut_spectrogram)
-            plt.close()
-        break # comment to generate all
+            pickle.dump(cut_spectrogram,open('%s.pkl' % output_file,'wb'))
+            #plt.imsave('%s.png' % output_file, cut_spectrogram)
+            #plt.close()
+        #break # comment to generate all
         
 cut_background_noise(audio_path+'_background_noise_',img_path_train)
 
@@ -130,7 +133,8 @@ def wav2img(wav_path, targetdir='', figsize=(4,4)):
     if target_name in unknownList:
         target_name = 'unknown'
     output_file = targetdir +'/'+ target_name + '_'+ output_file
-    scipy.misc.imsave('%s.png' % output_file, padded_spectrogram)
+    #scipy.misc.imsave('%s.png' % output_file, padded_spectrogram)
+    pickle.dump(padded_spectrogram,open('%s.pkl' % output_file,'wb'))
     #plt.imshow(spectrogram.T, aspect='auto', origin='lower')
     #plt.imsave('%s.png' % output_file, padded_spectrogram)
     #plt.close()
@@ -141,13 +145,14 @@ def img_dim(wav_path, targetdir='', figsize=(4,4)):
     return spectrogram.shape[0]
 
 #====convert to image and save, separate train, validate, test====  
+print('started generating pickle files...')
 img_dim_dict={}
 for i, x in enumerate(subFolderList):
     print(i, ':', x)
     img_dim_dict[x]=[]
     # get all the wave files
     all_files = [y for y in os.listdir(audio_path + x) if '.wav' in y]
-    for file in all_files[:100]: #100 images for each label
+    for file in all_files: #100 images for each label
         if (x + '/' + file) in validation_list:
             wav2img(audio_path + x + '/' + file, img_path_validate)
         elif (x + '/' + file) in testing_list:
