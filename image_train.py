@@ -25,13 +25,13 @@ import numpy as np
 LEARNING_RATE=0.01
 NUM_CLASSES=12
 BATCH_SIZE=128
-NUM_EPOCHES=1
+NUM_EPOCHES=20
 EVA_STEP=10
 #########################################
 # Load data                             #
 #########################################
-#root_path = '/Users/jili/Box Sync/speechRec/'
-root_path='/Users/jingzhuyan/Documents/kaggle/'
+root_path = '/Users/jili/Box Sync/speechRec/'
+#root_path='/Users/jingzhuyan/Documents/kaggle/'
 exec(open(root_path+'speechrec/image_gen.py').read())
 NUM_TRAIN_STEPS=int(len(all_files)/BATCH_SIZE)
 ##################################################
@@ -52,12 +52,12 @@ for i in range(4):
     conv = tf.layers.max_pooling2d(inputs=conv, pool_size=[2,2], strides=2)
 
 mpool = tf.reduce_max(conv, axis=[1, 2], keep_dims=True)
-#apool = tf.reduce_mean(conv, axis=[1, 2], keep_dims=True) # ?
-#pool = 0.5 * (mpool + apool)
-flat = tf.reshape(mpool, [-1, 128])
+apool = tf.reduce_mean(conv, axis=[1, 2], keep_dims=True) # ?
+pool = 0.5 * (mpool + apool)
+flat = tf.reshape(pool, [-1, 128])
 
 dense_layer = tf.layers.dense(inputs=flat, units=64, activation=tf.nn.relu)
-dense_drop = tf.nn.dropout(dense_layer, keep_prob=0.7)
+dense_drop = tf.nn.dropout(dense_layer, keep_prob=1)
 
 logits = tf.layers.dense(dense_drop, NUM_CLASSES, activation=None, name='logits')
 probs=tf.nn.softmax(logits, name='probs')
@@ -85,5 +85,5 @@ with tf.Session() as sess:
             if (step+1) % EVA_STEP == 0: # print loss every EVA_STEP
                 print('Average loss at Epoch %d and Step %d is: %f' %(ep, step, total_loss/EVA_STEP))
                 total_loss=0.0
-    saver.save(sess, root_path+'/objects/20171202/1', global_step=0)
+    saver.save(sess, root_path+'/objects/20171204/1', global_step=0)
     

@@ -19,8 +19,8 @@ from scipy.fftpack import fft
 #%matplotlib inline
 
 #====set file path====
-root_path='/Users/jingzhuyan/Documents/kaggle'
-#root_path='/Users/jili/Box Sync/speechRec/'
+#root_path='/Users/jingzhuyan/Documents/kaggle'
+root_path='/Users/jili/Box Sync/speechRec/'
 #root_path='/Users/jingzhuyan/Documents/GitHub'
 audio_path = root_path+'/train/audio/'
 img_path_train = root_path+'/image/train/'
