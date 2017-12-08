@@ -22,8 +22,8 @@ from scipy.fftpack import fft
 from random import shuffle
 
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2' 
-root_path = '/Users/jili/Box Sync/speechRec/'
-#root_path='/Users/jingzhuyan/Documents/kaggle'
+#root_path = '/Users/jili/Box Sync/speechRec/'
+root_path='/Users/jingzhuyan/Documents/kaggle'
 img_path_test = root_path+'/image/test/'
 
 # Parameters

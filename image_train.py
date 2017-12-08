@@ -18,6 +18,7 @@ import os, random
 os.environ['TF_CPP_MIN_LOG_LEVEL']='2' 
 import tensorflow as tf
 import numpy as np
+import matplotlib.pyplot as plt
 
 ##############################################
 # Define hyperparams                         #
@@ -30,8 +31,8 @@ EVA_STEP=10
 #########################################
 # Load data                             #
 #########################################
-root_path = '/Users/jili/Box Sync/speechRec/'
-#root_path='/Users/jingzhuyan/Documents/kaggle/'
+#root_path = '/Users/jili/Box Sync/speechRec/'
+root_path='/Users/jingzhuyan/Documents/kaggle/'
 exec(open(root_path+'speechrec/image_gen.py').read())
 NUM_TRAIN_STEPS=int(len(all_files)/BATCH_SIZE)
 ##################################################
@@ -68,6 +69,7 @@ loss = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(labels=y,logits=lo
 #optimizer=tf.train.RMSPropOptimizer(LEARNING_RATE).minimize(loss)
 optimizer=tf.train.MomentumOptimizer(LEARNING_RATE, 0.9, use_nesterov=True).minimize(loss)
 
+train_loss=[]
 saver = tf.train.Saver()
 with tf.Session() as sess:
     print('Graph started...')
@@ -84,6 +86,8 @@ with tf.Session() as sess:
             # Evaluate Training Data
             if (step+1) % EVA_STEP == 0: # print loss every EVA_STEP
                 print('Average loss at Epoch %d and Step %d is: %f' %(ep, step, total_loss/EVA_STEP))
+                train_loss.append(total_loss/EVA_STEP)
                 total_loss=0.0
     saver.save(sess, root_path+'/objects/20171204/1', global_step=0)
     
+plt.plot(train_loss)
